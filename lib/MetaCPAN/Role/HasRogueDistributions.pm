@@ -2,7 +2,7 @@ package MetaCPAN::Role::HasRogueDistributions;
 
 use Moose::Role;
 
-use MetaCPAN::Types qw( ArrayRef );
+use MetaCPAN::Types::TypeTiny qw( ArrayRef );
 
 has rogue_distributions => (
     is      => 'ro',
@@ -18,7 +18,7 @@ has rogue_distributions => (
                 perl_mlb
                 pod2texi
                 spodcxx
-                )
+            )
         ];
     },
 );

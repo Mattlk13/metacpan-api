@@ -7,18 +7,18 @@ use feature qw( state );
 use Data::Printer;
 use DateTime;
 use IO::Zlib ();
-use Cpanel::JSON::XS;
+use Cpanel::JSON::XS qw( decode_json encode_json );
 use Log::Contextual qw( :log :dlog );
-use MetaCPAN::Types qw( Bool Int Str File );
+use MetaCPAN::Types::TypeTiny qw( Bool Int Path Str );
 use Moose;
-use Try::Tiny;
+use Try::Tiny qw( catch try );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt::Dashes';
 
 has batch_size => (
-    is      => 'ro',
-    isa     => Int,
-    default => 100,
+    is            => 'ro',
+    isa           => Int,
+    default       => 100,
     documentation =>
         'Number of documents to restore in one batch, defaults to 100',
 );
@@ -50,7 +50,7 @@ has dry_run => (
 
 has restore => (
     is            => 'ro',
-    isa           => File,
+    isa           => Path,
     coerce        => 1,
     documentation => 'Restore a backup',
 );
@@ -69,8 +69,8 @@ sub run {
         grep {defined} $self->index->name,
         $self->type );
 
-    my $file = $self->home->subdir(qw(var backup))->file("$filename.json.gz");
-    $file->dir->mkpath unless ( -e $file->dir );
+    my $file = $self->home->child( qw(var backup), "$filename.json.gz" );
+    $file->parent->mkpath unless ( -e $file->parent );
     my $fh = IO::Zlib->new( "$file", 'wb4' );
 
     my $scroll = $es->scroll_helper(
@@ -191,8 +191,8 @@ sub run_purge {
     my $self = shift;
 
     my $now = DateTime->now;
-    $self->home->subdir(qw(var backup))->recurse(
-        callback => sub {
+    $self->home->child(qw(var backup))->visit(
+        sub {
             my $file = shift;
             return if ( $file->is_dir );
 
@@ -211,7 +211,8 @@ sub run_purge {
                 if ( $self->dry_run );
                 $file->remove;
             }
-        }
+        },
+        { recurse => 1 }
     );
 }
 

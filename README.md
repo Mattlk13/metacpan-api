@@ -1,6 +1,6 @@
+[![CircleCI](https://circleci.com/gh/metacpan/metacpan-api.svg?style=svg)](https://circleci.com/gh/metacpan/metacpan-api)
 [![Build Status](https://travis-ci.org/metacpan/metacpan-api.svg?branch=master)](https://travis-ci.org/metacpan/metacpan-api)
 [![Coverage Status](https://coveralls.io/repos/metacpan/metacpan-api/badge.svg)](https://coveralls.io/r/metacpan/metacpan-api)
-[![Kritika Analysis Status](https://kritika.io/users/oalders/repos/6702044523424530/heads/master/status.svg)](https://kritika.io/users/oalders/repos/6702044523424530/heads/master/)
 
 A Web Service for the CPAN
 ==========================
@@ -13,7 +13,7 @@ REST API
 
 MetaCPAN is based on Elasticsearch, so it provides a RESTful interface as well
 as the option to create complex queries. [The
-wiki](https://github.com/metacpan/metacpan-api/wiki/API-docs) provides a good
+`docs/` directory](https://github.com/metacpan/metacpan-api/blob/master/docs/API-docs.md) provides a good
 starting point for REST access to MetaCPAN.
 
 Expanding Your Author Info

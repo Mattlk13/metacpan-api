@@ -1,14 +1,11 @@
 package MetaCPAN::Server::Controller;
 
-use strict;
-use warnings;
+use Moose;
 use namespace::autoclean;
 
-use Cpanel::JSON::XS;
-use List::MoreUtils ();
-use Moose::Util     ();
-use Moose;
-use MetaCPAN::Types qw( HashRef );
+use Cpanel::JSON::XS ();
+use Moose::Util      ();
+use MetaCPAN::Types::TypeTiny qw( HashRef );
 use MetaCPAN::Util qw( single_valued_arrayref_to_scalar );
 
 BEGIN { extends 'Catalyst::Controller'; }
@@ -96,13 +93,13 @@ sub get : Path('') : Args(1) {
         ['The requested field(s) could not be found'] );
 }
 
-sub all : Path('') : Args(0) : ActionClass('Deserialize') {
+sub all : Path('') : Args(0) : ActionClass('~Deserialize') {
     my ( $self, $c ) = @_;
     $c->req->params->{q} ||= '*' unless ( $c->req->data );
     $c->forward('search');
 }
 
-sub search : Path('_search') : ActionClass('Deserialize') {
+sub search : Path('_search') : ActionClass('~Deserialize') {
     my ( $self, $c ) = @_;
     my $req = $c->req;
 
@@ -132,7 +129,7 @@ sub search : Path('_search') : ActionClass('Deserialize') {
     } or do { $self->internal_error( $c, $@ ) };
 }
 
-sub join : ActionClass('Deserialize') {
+sub join : ActionClass('~Deserialize') {
     my ( $self, $c ) = @_;
     my $joins     = $self->relationships;
     my @req_joins = $c->req->param('join');
@@ -166,7 +163,7 @@ sub join : ActionClass('Deserialize') {
             ];
         my @ids = List::MoreUtils::uniq grep {defined}
             map { ref $cself eq 'CODE' ? $cself->($_) : $_->{$cself} } @$data;
-        my $filter = { terms => { $config->{foreign} => [@ids] } };
+        my $filter   = { terms => { $config->{foreign} => [@ids] } };
         my $filtered = {%$query};    # don't work on $query
         $filtered->{filter}
             = $query->{filter}

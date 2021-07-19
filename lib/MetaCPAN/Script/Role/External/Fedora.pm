@@ -4,7 +4,7 @@ use v5.010;
 use Moose::Role;
 use namespace::autoclean;
 
-use URI;
+use URI ();
 use Cpanel::JSON::XS qw( decode_json );
 use Log::Contextual qw( :log );
 
@@ -15,8 +15,8 @@ sub run_fedora {
 
     my $uri = URI->new('https://admin.fedoraproject.org/pkgdb/api/packages/');
     my $options = {
-        page  => 1,     # start at the beginning
-        limit => 500,   # max, says https://admin.fedoraproject.org/pkgdb/api/
+        page   => 1,    # start at the beginning
+        limit  => 500,  # max, says https://admin.fedoraproject.org/pkgdb/api/
         status => 'Approved',
     };
     my $total = 1;

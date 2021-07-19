@@ -2,13 +2,11 @@ package MetaCPAN::Document::File::Set;
 
 use Moose;
 
-use MetaCPAN::Util qw( single_valued_arrayref_to_scalar );
-use Ref::Util qw( is_hashref );
 use List::Util qw( max );
-
-use MetaCPAN::Query::File;
-use MetaCPAN::Query::Favorite;
-use MetaCPAN::Query::Release;
+use MetaCPAN::Query::Favorite ();
+use MetaCPAN::Query::File     ();
+use MetaCPAN::Query::Release  ();
+use MetaCPAN::Util qw( single_valued_arrayref_to_scalar );
 
 extends 'ElasticSearchX::Model::Document::Set';
 
@@ -17,7 +15,13 @@ has query_file => (
     isa     => 'MetaCPAN::Query::File',
     lazy    => 1,
     builder => '_build_query_file',
-    handles => [qw< dir interesting_files >],
+    handles => [
+        qw(
+            dir
+            interesting_files
+            files_by_category
+        )
+    ],
 );
 
 sub _build_query_file {
@@ -620,15 +624,9 @@ sub autocomplete_suggester {
         my $got = $_->{fields};
         my %record;
         @record{@fields} = map { $got->{$_}[0] } @fields;
-        $record{name} = delete $record{documentation};    # rename
+        $record{name} = delete $record{documentation};       # rename
         ( $_->{fields}{documentation}[0] => \%record );
     } @{ $data->{hits}{hits} };
-
-    # normalize 'deprecated' field values to boolean (1/0) values (because ES)
-    for my $v ( values %valid ) {
-        $v->{deprecated} = 1 if $v->{deprecated} eq 'true';
-        $v->{deprecated} = 0 if $v->{deprecated} eq 'false';
-    }
 
     # remove any exact match, it will be added later
     my $exact = delete $valid{$query};
@@ -643,7 +641,7 @@ sub autocomplete_suggester {
                $valid{$a}->{deprecated} <=> $valid{$b}->{deprecated}
             || $favorites->{ $valid{$b}->{distribution} }
             <=> $favorites->{ $valid{$a}->{distribution} }
-            || $docs{$b} <=> $docs{$a}
+            || $docs{$b}  <=> $docs{$a}
             || length($a) <=> length($b)
             || $a cmp $b
         }
@@ -654,75 +652,10 @@ sub autocomplete_suggester {
 
 sub find_changes_files {
     my ( $self, $author, $release ) = @_;
-
-    # find the most likely file
-    # TODO: should we do this when the release is indexed
-    # and store the result as { 'changes_file' => $name }
-
-    my @candidates = qw(
-        CHANGELOG
-        ChangeLog
-        Changelog
-        ChangeLog.pm
-        changelog.pm
-        ChangeLog.pod
-        CHANGES
-        Changes
-        CHANGES.md
-        CHANGES.markdown
-        CHANGES.pm
-        Changes.pm
-        CHANGES.pod
-        Changes.pod
-        NEWS
-    );
-
-    # use $c->model b/c we can't let any filters apply here
-    my $file = $self->raw->filter(
-        {
-            and => [
-                { term => { release => $release } },
-                { term => { author  => $author } },
-                {
-                    or => [
-
-                        # if it's a perl release, get perldelta
-                        {
-                            and => [
-                                { term => { distribution => 'perl' } },
-                                {
-                                    term => {
-                                        'name' => 'perldelta.pod'
-                                    }
-                                },
-                            ]
-                        },
-
-                      # otherwise look for one of these candidates in the root
-                        {
-                            and => [
-                                { term => { level     => 0 } },
-                                { term => { directory => 0 } },
-                                {
-                                    or => [
-                                        map { { term => { 'name' => $_ } } }
-                                            @candidates
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                }
-            ]
-        }
-    )->size(1)
-
-        # HACK: Sort by level/desc to put pod/perldeta.pod first (if found)
-        # otherwise sort root files by name and select the first.
-        ->sort( [ { level => 'desc' }, { name => 'asc' } ] )->first;
-
-    return unless is_hashref($file);
-    return $file->{_source};
+    my $result = $self->files_by_category( $author, $release, ['changelog'],
+        { fields => \1 } );
+    my ($file) = @{ $result->{categories}{changelog} || [] };
+    return $file;
 }
 
 __PACKAGE__->meta->make_immutable;

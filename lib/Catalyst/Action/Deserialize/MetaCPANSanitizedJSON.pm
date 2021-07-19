@@ -2,7 +2,7 @@ package Catalyst::Action::Deserialize::MetaCPANSanitizedJSON;
 
 use Moose;
 use namespace::autoclean;
-use Try::Tiny;
+use Try::Tiny qw( catch try );
 use Cpanel::JSON::XS                 ();
 use MetaCPAN::Server::QuerySanitizer ();
 
@@ -39,7 +39,7 @@ around execute => sub {
                     if ( my $source = delete $params->{source} ) {
 
                    # NOTE: merge $controller->{json_options} if we ever use it
-                        my $json = JSON->new->utf8;
+                        my $json = Cpanel::JSON::XS->new->utf8;
 
                         # if it decodes
                         if ( try { $source = $json->decode($source); } ) {

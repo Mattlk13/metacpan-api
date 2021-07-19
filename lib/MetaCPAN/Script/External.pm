@@ -7,7 +7,7 @@ use Email::Sender::Simple ();
 use Email::Simple         ();
 use Log::Contextual qw( :log );
 
-use MetaCPAN::Types qw( Str );
+use MetaCPAN::Types::TypeTiny qw( Str );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt',
     'MetaCPAN::Script::Role::External::Cygwin',

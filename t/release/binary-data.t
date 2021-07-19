@@ -3,7 +3,7 @@ use warnings;
 use lib 't/lib';
 
 use Cpanel::JSON::XS ();
-use MetaCPAN::TestHelpers;
+use MetaCPAN::TestHelpers qw( test_release );
 use Test::More;
 
 test_release(
@@ -32,7 +32,7 @@ test_release(
                     authorized       => Cpanel::JSON::XS::true(),
                     version          => '0.02',
                     version_numified => 0.02,
-                    associated_pod =>
+                    associated_pod   =>
                         'BORISNAT/Binary-Data-0.01/lib/Binary/Data/WithPod.pm',
                 },
             ],

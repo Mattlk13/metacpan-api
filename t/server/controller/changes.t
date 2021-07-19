@@ -3,7 +3,7 @@ use warnings;
 use lib 't/lib';
 
 use MetaCPAN::Server::Test;
-use MetaCPAN::TestHelpers;
+use MetaCPAN::TestHelpers qw( decode_json_ok test_cache_headers );
 use Test::More;
 
 my $LOCAL_default_headers = {
@@ -74,7 +74,7 @@ my @tests = (
     # 'perl' doesn't get flagged as latest.
     [
         '/changes/RWSTAUNER/perl-1' => 200,
-        'perldelta.pod' =>
+        'perldelta.pod'             =>
             qr/^=head1 NAME\n\nperldelta - changes for perl\n\n/m,
         $RWSTAUNER_default_headers,
     ],

@@ -5,12 +5,8 @@ use lib 't/lib';
 use MetaCPAN::Model::Search ();
 use MetaCPAN::TestServer    ();
 use Test::More;
-use Test::Deep qw(cmp_deeply ignore);
+use Test::Deep qw( cmp_deeply ignore );
 use Cpanel::JSON::XS ();
-
-plan skip_all =>
-    "Travis ES bad, see https://travis-ci.org/metacpan/metacpan-api/jobs/301092129"
-    if $ENV{TRAVIS};
 
 # Just use this to get an es object.
 my $server = MetaCPAN::TestServer->new;
@@ -61,6 +57,17 @@ ok( $search->_not_rogue, '_not_rogue' );
 {
     my $results = $search->search_web('author:Mo');
     is( @{ $results->{results} }, 5, '5 results on author search' );
+}
+
+{
+    my $results = $search->search_web('author:Mo BadPod');
+    isnt( @{ $results->{results} },
+        0, '>0 results on author search with extra' );
+}
+
+{
+    eval { $search->search_web('usr/bin/env') };
+    is( $@, '', 'search term with a / no exception' );
 }
 
 {

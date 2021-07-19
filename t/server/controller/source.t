@@ -2,8 +2,9 @@ use strict;
 use warnings;
 use lib 't/lib';
 
+use Cpanel::JSON::XS ();
 use MetaCPAN::Server::Test;
-use MetaCPAN::TestHelpers;
+use MetaCPAN::TestHelpers qw( test_cache_headers );
 use Test::More;
 
 my %tests = (
@@ -86,7 +87,7 @@ test_psgi app, sub {
                     t/00-nop.t
                     META.json
                     META.yml
-                    )
+                )
             );
             if ( $k =~ /callback=foo/ ) {
                 ok(
@@ -95,8 +96,8 @@ test_psgi app, sub {
                     'JSONP wrapper'
                 );
                 ok(
-                    my $jsdata
-                        = JSON->new->allow_nonref->decode($function_args),
+                    my $jsdata = Cpanel::JSON::XS->new->allow_nonref->decode(
+                        $function_args),
                     'decode json'
                 );
                 is( $jsdata, $manifest, 'JSONP-wrapped manifest' );

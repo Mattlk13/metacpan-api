@@ -3,15 +3,14 @@ package MetaCPAN::Role::Script;
 use Moose::Role;
 
 use ElasticSearchX::Model::Document::Types qw(:all);
-use FindBin;
 use Git::Helpers qw( checkout_root );
 use Log::Contextual qw( :log :dlog );
-use MetaCPAN::Model;
-use MetaCPAN::Types qw(:all);
-use Mojo::Server;
+use MetaCPAN::Model ();
+use MetaCPAN::Types::TypeTiny qw( Bool Int Path Str );
+use Mojo::Server ();
 use Term::ANSIColor qw( colored );
 use IO::Interactive qw( is_interactive );
-use IO::Prompt;
+use IO::Prompt qw( prompt );
 use File::Path ();
 
 use Carp ();
@@ -20,11 +19,11 @@ with( 'MetaCPAN::Role::HasConfig', 'MetaCPAN::Role::Fastly',
     'MetaCPAN::Role::Logger' );
 
 has cpan => (
-    is      => 'ro',
-    isa     => Dir,
-    lazy    => 1,
-    builder => '_build_cpan',
-    coerce  => 1,
+    is            => 'ro',
+    isa           => Path,
+    lazy          => 1,
+    builder       => '_build_cpan',
+    coerce        => 1,
     documentation =>
         'Location of a local CPAN mirror, looks for $ENV{MINICPAN} and ~/CPAN',
 );
@@ -64,10 +63,10 @@ has model => (
 );
 
 has index => (
-    reader  => '_index',
-    is      => 'ro',
-    isa     => Str,
-    default => 'cpan',
+    reader        => '_index',
+    is            => 'ro',
+    isa           => Str,
+    default       => 'cpan',
     documentation =>
         'Index to use, defaults to "cpan" (when used: also export ES_SCRIPT_INDEX)',
 );
@@ -81,7 +80,7 @@ has port => (
 
 has home => (
     is      => 'ro',
-    isa     => Dir,
+    isa     => Path,
     lazy    => 1,
     coerce  => 1,
     default => sub { checkout_root() },

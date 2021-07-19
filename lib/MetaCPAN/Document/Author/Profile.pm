@@ -9,7 +9,7 @@ use ElasticSearchX::Model::Document;
 with 'ElasticSearchX::Model::Document::EmbeddedRole';
 
 use MetaCPAN::Util;
-use MetaCPAN::Types qw( Str );
+use MetaCPAN::Types::TypeTiny qw( Str );
 
 has name => (
     is       => 'ro',

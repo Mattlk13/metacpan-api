@@ -2,9 +2,7 @@ use strict;
 use warnings;
 use lib 't/lib';
 
-use FindBin;
-use MetaCPAN::Model::Release;
-use MetaCPAN::Script::Runner;
+use MetaCPAN::Model::Release ();
 use MetaCPAN::TestHelpers qw( fakecpan_dir get_config );
 use Test::More;
 
@@ -42,7 +40,7 @@ foreach my $test (
     my $extract_dir = $release->extract;
     foreach my $file (@$files) {
         ok(
-            -e $extract_dir->file( $name, $file ),
+            -e $extract_dir->child( $name, $file ),
             "meta file $file exists in $name"
         );
     }

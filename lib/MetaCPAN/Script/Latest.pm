@@ -8,8 +8,8 @@ use Moose;
 use MooseX::Aliases;
 use Parse::CPAN::Packages::Fast;
 use Regexp::Common qw(time);
-use Time::Local;
-use MetaCPAN::Types qw( Bool Str );
+use Time::Local qw( timelocal );
+use MetaCPAN::Types::TypeTiny qw( Bool Str );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt';
 
@@ -39,7 +39,8 @@ has force => (
 
 sub _build_packages {
     return Parse::CPAN::Packages::Fast->new(
-        shift->cpan->file(qw(modules 02packages.details.txt.gz))->stringify );
+        shift->cpan->child(qw(modules 02packages.details.txt.gz))
+            ->stringify );
 }
 
 sub _queue_latest {

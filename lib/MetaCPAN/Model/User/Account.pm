@@ -6,9 +6,9 @@ use warnings;
 use Moose;
 use ElasticSearchX::Model::Document;
 
-use MetaCPAN::Model::User::Identity;
-use MetaCPAN::Types qw(:all);
-use MooseX::Types::Structured qw(Dict);
+use MetaCPAN::Model::User::Identity ();
+use MetaCPAN::Types qw( Identity );
+use MetaCPAN::Types::TypeTiny qw( ArrayRef Bool Dict Str );
 use MetaCPAN::Util;
 
 =head1 PROPERTIES
@@ -148,7 +148,7 @@ sub get_identities {
 
 sub remove_identity {
     my ( $self, $identity ) = @_;
-    my $ids = $self->identity;
+    my $ids  = $self->identity;
     my ($id) = grep { $_->{name} eq $identity } @$ids;
     @$ids = grep { $_->{name} ne $identity } @$ids;
 

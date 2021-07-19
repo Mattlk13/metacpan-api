@@ -8,7 +8,7 @@ use Moose;
 use Log::Contextual qw( :log );
 use Ref::Util qw( is_arrayref );
 
-use MetaCPAN::Types qw( Bool HashRef Int Str );
+use MetaCPAN::Types::TypeTiny qw( Bool HashRef Int Str );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt',
     'MetaCPAN::Script::Role::Contributor';
@@ -21,15 +21,15 @@ has all => (
 );
 
 has distribution => (
-    is  => 'ro',
-    isa => Str,
+    is            => 'ro',
+    isa           => Str,
     documentation =>
         'update contributors for all releases matching distribution name',
 );
 
 has release => (
-    is  => 'ro',
-    isa => Str,
+    is            => 'ro',
+    isa           => Str,
     documentation =>
         'update contributors for a single release (format: author/release_name)',
 );

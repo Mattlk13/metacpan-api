@@ -8,8 +8,18 @@ use ElasticSearchX::Model::Document;
 
 # load order not important
 use Gravatar::URL ();
-use MetaCPAN::Types qw(:all);
-use MooseX::Types::Structured qw(Dict Tuple Optional);
+use MetaCPAN::Types qw( Profile );
+use MetaCPAN::Types::TypeTiny qw(
+    ArrayRef
+    ArrayRefPromote
+    Blog
+    Bool
+    Dict
+    HashRef
+    NonEmptySimpleStr
+    PerlMongers
+    Str
+);
 use MetaCPAN::Util;
 
 has name => (
@@ -28,7 +38,7 @@ has asciiname => (
 );
 
 has [qw(website email)] =>
-    ( is => 'ro', required => 1, isa => ArrayRef, coerce => 1 );
+    ( is => 'ro', required => 1, isa => ArrayRefPromote, coerce => 1 );
 
 has pauseid => (
     is       => 'ro',

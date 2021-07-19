@@ -1,14 +1,20 @@
 package MetaCPAN::Document::Release;
 
-use strict;
-use warnings;
-
 use Moose;
-use DateTime qw();
-use Ref::Util qw();
-use ElasticSearchX::Model::Document;
 
-use MetaCPAN::Types qw(:all);
+use DateTime qw();
+use ElasticSearchX::Model::Document;
+use MetaCPAN::Types qw( Dependency );
+use MetaCPAN::Types::TypeTiny qw(
+    ArrayRef
+    Bool
+    HashRefCPANMeta
+    Num
+    Resources
+    Stat
+    Str
+    Tests
+);
 use MetaCPAN::Util qw( numify_version );
 
 =head1 PROPERTIES
@@ -239,7 +245,7 @@ has first => (
 has metadata => (
     coerce      => 1,
     is          => 'ro',
-    isa         => HashRef,
+    isa         => HashRefCPANMeta,
     dynamic     => 1,
     source_only => 1,
 );

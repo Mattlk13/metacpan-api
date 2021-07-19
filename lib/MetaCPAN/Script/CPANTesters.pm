@@ -1,17 +1,13 @@
 package MetaCPAN::Script::CPANTesters;
 
-use strict;
-use warnings;
+use Moose;
 
 use DBI ();
-use File::Spec::Functions qw(catfile);
-use File::Temp qw(tempdir);
-use File::stat qw(stat);
-use IO::Uncompress::Bunzip2 qw(bunzip2);
+use File::stat qw( stat );
+use IO::Uncompress::Bunzip2 qw( bunzip2 );
 use Log::Contextual qw( :log :dlog );
-use MetaCPAN::Types qw( Bool File Uri );
-use ElasticSearchX::Model::Document::Types qw(ESBulk);
-use Moose;
+use MetaCPAN::Types::TypeTiny qw( Bool Path Uri );
+use ElasticSearchX::Model::Document::Types qw( ESBulk );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt::Dashes';
 
@@ -32,9 +28,9 @@ has force_refresh => (
 # XXX move path to config
 has mirror_file => (
     is      => 'ro',
-    isa     => File,
+    isa     => Path,
     default => sub {
-        shift->home->file( 'var', ( $ENV{HARNESS_ACTIVE} ? 't' : () ),
+        shift->home->child( 'var', ( $ENV{HARNESS_ACTIVE} ? 't' : () ),
             'tmp', 'cpantesters.db' );
     },
     coerce => 1,
@@ -61,7 +57,7 @@ has _bulk => (
 sub _build_db {
     my $self = shift;
     return $ENV{HARNESS_ACTIVE}
-        ? $self->home->file('t/var/cpantesters-release-fake.db.bz2')
+        ? $self->home->child('t/var/cpantesters-release-fake.db.bz2')
         : 'http://devel.cpantesters.org/release/release.db.bz2';
 }
 
@@ -105,8 +101,8 @@ sub index_reports {
         $version =~ s{\Av}{} if $version;
 
         $releases{
-            join( '-', grep {defined} $data->{distribution}, $version )
-        } = $data;
+            join( '-', grep {defined} $data->{distribution}, $version ) }
+            = $data;
     }
 
     log_info { 'Opening database file at ' . $db };

@@ -8,7 +8,12 @@ with 'MetaCPAN::Query::Role::Common';
 
 sub agg_by_distributions {
     my ( $self, $distributions, $user ) = @_;
-    return unless $distributions;
+    return {
+        favorites   => {},
+        myfavorites => {},
+        took        => 0,
+        }
+        unless $distributions;
 
     my $body = {
         size  => 0,
@@ -158,14 +163,13 @@ sub recent {
             sort  => [ { 'date' => { order => 'desc' } } ]
         }
     );
-    return {} unless $favs->{hits}{total};
 
     my @favs = map { $_->{_source} } @{ $favs->{hits}{hits} };
 
     return +{
         favorites => \@favs,
         took      => $favs->{took},
-        total     => $favs->{total}
+        total     => $favs->{hits}{total}
     };
 }
 

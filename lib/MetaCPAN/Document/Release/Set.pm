@@ -4,7 +4,7 @@ use Moose;
 
 use MetaCPAN::Util qw( single_valued_arrayref_to_scalar );
 
-use MetaCPAN::Query::Release;
+use MetaCPAN::Query::Release ();
 
 extends 'ElasticSearchX::Model::Document::Set';
 
@@ -31,7 +31,7 @@ has query_release => (
             reverse_dependencies
             top_uploaders
             versions
-            >
+        >
     ],
 );
 
@@ -66,7 +66,7 @@ sub predecessor {
         {
             and => [
                 { term => { distribution => $name } },
-                { not => { filter => { term => { status => 'latest' } } } },
+                { not  => { filter => { term => { status => 'latest' } } } },
             ]
         }
     )->sort( [ { date => 'desc' } ] )->first;

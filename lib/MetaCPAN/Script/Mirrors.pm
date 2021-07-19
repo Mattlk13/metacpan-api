@@ -5,7 +5,7 @@ use warnings;
 
 use Cpanel::JSON::XS ();
 use Log::Contextual qw( :log :dlog );
-use MetaCPAN::Document::Mirror;
+use MetaCPAN::Document::Mirror ();
 use Moose;
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt';
@@ -20,7 +20,7 @@ sub index_mirrors {
     my $self = shift;
     log_info { 'Getting mirrors.json file from ' . $self->cpan };
 
-    my $json = $self->cpan->file( 'indices', 'mirrors.json' )->slurp;
+    my $json = $self->cpan->child( 'indices', 'mirrors.json' )->slurp;
     my $type = $self->index->type('mirror');
 
     # Clear out everything in the index

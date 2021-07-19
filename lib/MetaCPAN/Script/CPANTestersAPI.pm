@@ -5,8 +5,8 @@ use warnings;
 
 use Log::Contextual qw( :log :dlog );
 use Cpanel::JSON::XS qw( decode_json );
-use MetaCPAN::Types qw( Uri );
-use ElasticSearchX::Model::Document::Types qw(ESBulk);
+use MetaCPAN::Types::TypeTiny qw( Uri );
+use ElasticSearchX::Model::Document::Types qw( ESBulk );
 use Moose;
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt::Dashes';
@@ -23,7 +23,7 @@ sub _build_url {
     my ($self) = @_;
     $ENV{HARNESS_ACTIVE}
         ? 'file:'
-        . $self->home->file('t/var/cpantesters-release-api-fake.json')
+        . $self->home->child('t/var/cpantesters-release-api-fake.json')
         : 'http://api-3.cpantesters.org/v3/release';
 }
 
@@ -79,8 +79,8 @@ sub index_reports {
         $version =~ s{\Av}{} if $version;
 
         $releases{
-            join( '-', grep {defined} $data->{distribution}, $version )
-        } = $data;
+            join( '-', grep {defined} $data->{distribution}, $version ) }
+            = $data;
     }
 
     for my $row (@$data) {

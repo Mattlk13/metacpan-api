@@ -6,7 +6,7 @@ use CPAN::DistnameInfo     ();
 use IO::Uncompress::Gunzip ();
 use Log::Contextual qw( :log );
 use MetaCPAN::Document::Package ();
-use MetaCPAN::Types qw( Bool );
+use MetaCPAN::Types::TypeTiny qw( Bool );
 
 with 'MooseX::Getopt', 'MetaCPAN::Role::Script';
 
@@ -31,7 +31,8 @@ sub run {
 sub _get_02packages_fh {
     my $self = shift;
     my $file
-        = $self->cpan->file(qw(modules 02packages.details.txt.gz))->stringify;
+        = $self->cpan->child(qw(modules 02packages.details.txt.gz))
+        ->stringify;
     my $fh_uz = IO::Uncompress::Gunzip->new($file);
     return $fh_uz;
 }

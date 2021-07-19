@@ -5,10 +5,10 @@ use warnings;
 use Moose;
 
 use CPAN::DistnameInfo;
-use Cpanel::JSON::XS;
+use Cpanel::JSON::XS qw( decode_json );
 use Log::Contextual qw( :log );
 use MetaCPAN::Util;
-use MetaCPAN::Types qw( Bool );
+use MetaCPAN::Types::TypeTiny qw( Bool );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt';
 
@@ -59,7 +59,8 @@ sub changes {
     for my $segment (@segments) {
         log_debug {"Loading RECENT-$segment.json"};
         my $json
-            = decode_json( $self->cpan->file("RECENT-$segment.json")->slurp );
+            = decode_json(
+            $self->cpan->child("RECENT-$segment.json")->slurp );
         for (
             grep {
                 $_->{path}
@@ -118,7 +119,7 @@ sub backpan_changes {
     while ( my $release = $scroll->next ) {
         my $data = $release->{fields};
         my $path
-            = $self->cpan->file( 'authors',
+            = $self->cpan->child( 'authors',
             MetaCPAN::Util::author_dir( $data->{author} ),
             $data->{archive} );
         next if ( -e $path );
@@ -150,7 +151,7 @@ sub skip {
 
 sub index_release {
     my ( $self, $release ) = @_;
-    my $archive = $self->cpan->file( $release->{path} )->stringify;
+    my $archive = $self->cpan->child( $release->{path} )->stringify;
     for ( my $i = 0; $i < 15; $i++ ) {
         last if ( -e $archive );
         log_debug {"Archive $archive does not yet exist"};

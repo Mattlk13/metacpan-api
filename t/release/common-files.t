@@ -3,7 +3,7 @@ use warnings;
 use lib 't/lib';
 
 use Cpanel::JSON::XS ();
-use MetaCPAN::TestHelpers;
+use MetaCPAN::TestHelpers qw( test_release );
 use Test::More;
 
 test_release(
@@ -21,7 +21,7 @@ test_release(
                     authorized       => Cpanel::JSON::XS::true(),
                     version          => '1.1',
                     version_numified => 1.1,
-                    associated_pod =>
+                    associated_pod   =>
                         'BORISNAT/Common-Files-1.1/lib/Common/Files.pm',
                 },
             ],

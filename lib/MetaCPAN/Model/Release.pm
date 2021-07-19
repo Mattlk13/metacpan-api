@@ -10,12 +10,12 @@ use DateTime           ();
 use File::Find         ();
 use File::Spec         ();
 use Log::Contextual qw( :log :dlog );
-use MetaCPAN::Model::Archive;
-use MetaCPAN::Types qw(ArrayRef AbsFile Str);
+use MetaCPAN::Model::Archive ();
+use MetaCPAN::Types::TypeTiny qw( AbsPath ArrayRef Str );
 use MetaCPAN::Util qw( fix_version);
 use Module::Metadata 1.000012 ();    # Improved package detection.
 use MooseX::StrictConstructor;
-use Path::Tiny qw(path);
+use Path::Tiny qw( path );
 use Parse::PMFile;
 use Try::Tiny qw( catch try );
 
@@ -61,7 +61,7 @@ has document => (
 
 has file => (
     is       => 'ro',
-    isa      => AbsFile,
+    isa      => AbsPath,
     required => 1,
     coerce   => 1,
 );

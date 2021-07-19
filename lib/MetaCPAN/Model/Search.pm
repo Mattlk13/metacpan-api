@@ -7,7 +7,7 @@ use Cpanel::JSON::XS ();
 use Hash::Merge qw( merge );
 use List::Util qw( min uniq );
 use Log::Contextual qw( :log :dlog );
-use MetaCPAN::Types qw( Object Str );
+use MetaCPAN::Types::TypeTiny qw( Object Str );
 use MetaCPAN::Util qw( single_valued_arrayref_to_scalar );
 use MooseX::StrictConstructor;
 
@@ -47,7 +47,6 @@ sub search_for_first_result {
     my ( $self, $search_term ) = @_;
     my $es_query   = $self->build_query($search_term);
     my $es_results = $self->run_query( file => $es_query );
-    return unless $es_results->{hits}{total};
 
     my $data = $es_results->{hits}{hits}[0];
     single_valued_arrayref_to_scalar( $data->{fields} );
@@ -79,11 +78,15 @@ sub search_web {
     $page_size //= 20;
     $from      //= 0;
 
+    $search_term =~ s{([+=><!&|\(\)\{\}[\]\^"~*?\\/])}{\\$1}g;
+
     # munge the search_term
     # these would be nicer if we had variable-length lookbehinds...
     # Allow q = 'author:LLAP' or 'module:Data::Page' or 'dist:'
-    # We are mapping to correct ES fields here - wonder if ANYONE
-    # uses these?!?!?!
+    # We are mapping to correct ES fields here - relied on by metacpan-web
+    # tests.
+    #
+    # The exceptions below are used specifically by the front end search.
     $search_term    #
         =~ s{(^|\s)author:([a-zA-Z]+)(?=\s|$)}{$1author:\U$2\E}g;
     $search_term
@@ -149,7 +152,7 @@ sub _search_collapsed {
         size   => 0,
         fields => [
             qw(
-                )
+            )
         ],
     };
 
@@ -219,8 +222,14 @@ sub build_query {
     $params //= {};
     ( my $clean = $search_term ) =~ s/::/ /g;
 
-    my $negative
-        = { term => { 'mime' => { value => 'text/x-script.perl' } } };
+    my $negative = {
+        bool => {
+            should => [
+                { term => { 'mime' => { value => 'text/x-script.perl' } } },
+                { term => { 'deprecated' => { value => 1, boost => -100 } } },
+            ],
+        },
+    };
 
     my $positive = {
         bool => {
@@ -354,7 +363,7 @@ sub build_query {
                     pod_lines
                     release
                     status
-                    )
+                )
             ],
         }
     );

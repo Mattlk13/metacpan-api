@@ -3,15 +3,15 @@ package MetaCPAN::Script::Snapshot;
 use strict;
 use warnings;
 
-use Cpanel::JSON::XS qw(encode_json decode_json);
+use Cpanel::JSON::XS qw( decode_json encode_json );
 use DateTime                  ();
 use DateTime::Format::ISO8601 ();
 use DDP;
 use HTTP::Tiny ();
 use Log::Contextual qw( :log );
-use MetaCPAN::Types qw( Bool Int Str File ArrayRef );
+use MetaCPAN::Types::TypeTiny qw( ArrayRef Bool Str );
 use Moose;
-use Sys::Hostname qw(hostname);
+use Sys::Hostname qw( hostname );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt::Dashes';
 
@@ -61,8 +61,8 @@ has purge_old => (
 
 ## Options
 has snap_stub => (
-    is  => 'ro',
-    isa => Str,
+    is            => 'ro',
+    isa           => Str,
     documentation =>
         'Stub of snapshot name ( e.g full, user etc ), used with dateformat to create the actual name in S3',
 );
@@ -88,9 +88,9 @@ has host => (
 
 # Note: can take wild cards https://www.elastic.co/guide/en/elasticsearch/reference/2.4/multi-index.html
 has indices => (
-    is      => 'ro',
-    isa     => ArrayRef,
-    default => sub { ['*'] },
+    is            => 'ro',
+    isa           => ArrayRef,
+    default       => sub { ['*'] },
     documentation =>
         'Which indices to snapshot, defaults to "*" (all), can take wild cards - "*v100*"',
 );
@@ -121,7 +121,7 @@ has http_client => (
 sub _build_http_client {
     return HTTP::Tiny->new(
         default_headers => { 'Accept' => 'application/json' },
-        timeout => 120,    # list can be slow
+        timeout         => 120,    # list can be slow
     );
 }
 
@@ -152,7 +152,7 @@ sub run_snapshot {
     my $snap_name = $self->snap_stub . '_' . $date;
 
     my $indices = join ',', @{ $self->indices };
-    my $data = {
+    my $data    = {
         "ignore_unavailable"   => 0,
         "include_global_state" => 1,
         "indices"              => $indices,
@@ -213,7 +213,7 @@ sub run_purge_old {
 
     foreach my $snap ( sort keys %to_delete ) {
         my $path = "${repository_name}/${snap}";
-        log_info {"Deleting ${path}"};
+        log_info {"Deleting ${path}"};
         my $response = $self->_request( 'delete', $path, {} );
     }
 

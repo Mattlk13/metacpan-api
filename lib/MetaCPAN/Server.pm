@@ -5,10 +5,9 @@ use Moose;
 ## no critic (Modules::RequireEndWithOne)
 use Catalyst qw( +MetaCPAN::Role::Fastly::Catalyst ), '-Log=warn,error,fatal';
 use CatalystX::RoleApplicator;
-use Digest::SHA;
-use File::Temp qw( tempdir );
+use Digest::SHA ();
 use Log::Log4perl::Catalyst;
-use Plack::Builder;
+use Plack::Builder qw( builder enable );
 use Plack::Middleware::ReverseProxy;
 use Plack::Middleware::ServerStatus::Lite;
 use Ref::Util qw( is_arrayref is_hashref );
@@ -26,7 +25,7 @@ __PACKAGE__->apply_request_class_roles(
         Catalyst::TraitFor::Request::REST
         Catalyst::TraitFor::Request::REST::ForBrowsers
         MetaCPAN::Server::Role::Request
-        )
+    )
 );
 __PACKAGE__->config(
     encoding           => 'UTF-8',
@@ -87,7 +86,7 @@ __PACKAGE__->setup(
         Session::State::Cookie
         Authentication
         OAuth2::Provider
-        )
+    )
 );
 
 sub app {
@@ -131,7 +130,7 @@ sub app {
 # request body (not both, 'body' parameters take precedence).
 # the returned output is an arrayref containing the parameter values.
 sub read_param {
-    my ( $c, $key ) = @_;
+    my ( $c, $key, $optional ) = @_;
 
     my $body_data = $c->req->body_data;
     my $params
@@ -139,10 +138,10 @@ sub read_param {
         ? $body_data->{$key}
         : [ $c->req->param($key) ];
 
-    $params = [$params] unless is_arrayref($params);
+    $params = [ $params // () ] unless is_arrayref($params);
 
     $c->detach( '/bad_request', ["Missing param: $key"] )
-        unless $params and @{$params};
+        if !$optional && !@$params;
 
     return $params;
 }

@@ -4,7 +4,9 @@ use lib 't/lib';
 
 use Digest::SHA qw( sha1_hex );
 use MetaCPAN::TestHelpers qw( fakecpan_dir );
-use Test::Most;
+use Test::Most import =>
+    [qw( cmp_bag done_testing is isa_ok like ok require_ok subtest throws_ok )
+    ];
 
 my $CLASS = 'MetaCPAN::Model::Archive';
 require_ok $CLASS;
@@ -30,7 +32,7 @@ subtest 'archive extraction' => sub {
             '2eba5fd5f9e08a9dcc1c5e2166b7d7d958caf377',
         'Some-1.00-TRIAL/META.json' => qr/"meta-spec"/,
         'Some-1.00-TRIAL/META.yml'  => qr/provides:/,
-        'Some-1.00-TRIAL/MANIFEST' =>
+        'Some-1.00-TRIAL/MANIFEST'  =>
             'e93d21831fb3d3cac905dbe852ba1a4a07abd991',
     );
 
@@ -46,7 +48,7 @@ subtest 'archive extraction' => sub {
 
     my $dir = $archive->extract;
     for my $file ( keys %want ) {
-        my $content = $dir->file($file)->slurp;
+        my $content = $dir->child($file)->slurp;
         if ( ref $want{$file} ) {
             like $content, $want{$file}, "content of $file";
         }
@@ -98,13 +100,13 @@ subtest 'set extract dir' => sub {
 
         my $dir = $archive->extract_dir;
 
-        isa_ok $dir, 'Path::Class::Dir';
+        isa_ok $dir, 'Path::Tiny';
         is $dir,     $temp;
         is $archive->extract, $temp;
-        ok -s $dir->file('Some-1.00-TRIAL/META.json');
+        ok -s $dir->child('Some-1.00-TRIAL/META.json');
     }
 
-    ok -e $temp, q[Path::Class doesn't clean up directories it was handed];
+    ok -e $temp, q[Path::Tiny doesn't clean up directories it was handed];
 };
 
 done_testing;

@@ -5,8 +5,8 @@ use warnings;
 use Moose;
 
 use Encoding::FixLatin ();
-use IPC::Run3;
-use MetaCPAN::Types qw( ArrayRef );
+use IPC::Run3 qw( run3 );
+use MetaCPAN::Types::TypeTiny qw( ArrayRef );
 use File::Spec;
 
 has git => (

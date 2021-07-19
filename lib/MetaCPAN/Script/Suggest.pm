@@ -7,7 +7,7 @@ use Moose;
 
 use DateTime ();
 use Log::Contextual qw( :log );
-use MetaCPAN::Types qw( Bool Int );
+use MetaCPAN::Types::TypeTiny qw( Bool Int );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt';
 

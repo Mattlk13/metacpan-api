@@ -7,7 +7,7 @@ use namespace::autoclean;
 use Moose;
 use ElasticSearchX::Model::Document;
 
-use MetaCPAN::Types qw( ArrayRef BugSummary RiverSummary);
+use MetaCPAN::Types::TypeTiny qw( BugSummary RiverSummary );
 
 has name => (
     is       => 'ro',
@@ -27,6 +27,14 @@ has river => (
     isa     => RiverSummary,
     dynamic => 1,
     writer  => '_set_river',
+    default => sub {
+        +{
+            bucket     => 0,
+            bus_factor => 1,
+            immediate  => 0,
+            total      => 0,
+        };
+    },
 );
 
 sub releases {

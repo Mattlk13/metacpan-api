@@ -3,7 +3,7 @@ use warnings;
 use lib 't/lib';
 
 use MetaCPAN::Server::Test;
-use MetaCPAN::TestHelpers;
+use MetaCPAN::TestHelpers qw( decode_json_ok );
 use Test::More;
 
 test_psgi app, sub {
@@ -27,7 +27,7 @@ test_psgi app, sub {
                 Multiple::Modules::Tester
                 Multiple::Modules::RDeps::A
                 Multiple::Modules::RDeps::Deprecated
-                )
+            )
             ],
             'results are sorted lexically by module name + length'
             or diag( Test::More::explain($got) );

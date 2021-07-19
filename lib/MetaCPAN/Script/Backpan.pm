@@ -7,7 +7,7 @@ use Moose;
 
 use Log::Contextual qw( :log :dlog );
 use BackPAN::Index;
-use MetaCPAN::Types qw( Bool HashRef Str );
+use MetaCPAN::Types::TypeTiny qw( Bool HashRef Str );
 
 with 'MetaCPAN::Role::Script', 'MooseX::Getopt::Dashes';
 
@@ -52,7 +52,7 @@ has _bulk => (
 
 sub _build_cpan_files_list {
     my $self = shift;
-    my $ls   = $self->cpan->file(qw(indices find-ls.gz));
+    my $ls   = $self->cpan->child(qw(indices find-ls.gz));
     unless ( -e $ls ) {
         log_error {"File $ls does not exist"};
         exit;

@@ -1,8 +1,8 @@
-use Test::Most;
 use strict;
 use warnings;
-use lib 't/lib';
-use MetaCPAN::Types qw(:all);
+
+use MetaCPAN::Types::TypeTiny qw( Resources );
+use Test::Most import => [qw( done_testing is_deeply ok )];
 
 is_deeply(
     Resources->coerce(
@@ -94,7 +94,7 @@ ok(
                 'http://search.cpan.org/dist/Dist-Zilla-Plugin-GitHub/',
             repository => {
                 type => 'git',
-                url =>
+                url  =>
                     'git://github.com/AlexBio/Dist-Zilla-Plugin-GitHub.git',
                 web => 'https://github.com/AlexBio/Dist-Zilla-Plugin-GitHub'
             }

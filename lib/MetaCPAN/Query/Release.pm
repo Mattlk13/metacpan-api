@@ -19,14 +19,14 @@ sub author_status {
 
         my ( $id_2, $id_1 ) = $id =~ /^((\w)\w)/;
         $status->{links} = {
-            cpan_directory => "http://cpan.org/authors/id/$id_1/$id_2/$id",
+            cpan_directory    => "http://cpan.org/authors/id/$id_1/$id_2/$id",
             backpan_directory =>
                 "https://cpan.metacpan.org/authors/id/$id_1/$id_2/$id",
-            cpants => "http://cpants.cpanauthors.org/author/$id",
+            cpants              => "http://cpants.cpanauthors.org/author/$id",
             cpantesters_reports =>
                 "http://cpantesters.org/author/$id_1/$id.html",
             cpantesters_matrix => "http://matrix.cpantesters.org/?author=$id",
-            metacpan_explorer =>
+            metacpan_explorer  =>
                 "https://explorer.metacpan.org/?url=/author/$id",
         };
     }
@@ -86,7 +86,7 @@ sub get_contributors {
 
     my $release  = $res->{hits}{hits}[0]{_source};
     my $contribs = $release->{metadata}{x_contributors} || [];
-    my $authors  = $release->{metadata}{author} || [];
+    my $authors  = $release->{metadata}{author}         || [];
 
     for ( \( $contribs, $authors ) ) {
 
@@ -364,7 +364,6 @@ sub by_author_and_name {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my $data = $ret->{hits}{hits}[0]{_source};
     single_valued_arrayref_to_scalar($data);
@@ -412,7 +411,6 @@ sub by_author_and_names {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my @releases;
     for my $hit ( @{ $ret->{hits}{hits} } ) {
@@ -454,7 +452,6 @@ sub by_author {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my $data = [ map { $_->{_source} } @{ $ret->{hits}{hits} } ];
     single_valued_arrayref_to_scalar($data);
@@ -491,7 +488,6 @@ sub latest_by_distribution {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my $data = $ret->{hits}{hits}[0]{_source};
     single_valued_arrayref_to_scalar($data);
@@ -526,7 +522,6 @@ sub latest_by_author {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my $data = [ map { $_->{fields} } @{ $ret->{hits}{hits} } ];
     single_valued_arrayref_to_scalar($data);
@@ -553,7 +548,6 @@ sub all_by_author {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my $data = [ map { $_->{fields} } @{ $ret->{hits}{hits} } ];
     single_valued_arrayref_to_scalar($data);
@@ -566,11 +560,55 @@ sub all_by_author {
 }
 
 sub versions {
-    my ( $self, $dist ) = @_;
+    my ( $self, $dist, $versions ) = @_;
 
     my $size = $dist eq 'perl' ? 1000 : 250;
+
+    my $query;
+
+    # 'versions' param was sent
+    if ( @{$versions} ) {
+        my $filter_versions;
+
+        # we only want 'latest' version
+        if ( @{$versions} == 1 and $versions->[0] eq 'latest' ) {
+            $filter_versions = { term => { status => 'latest' } };
+        }
+        else {
+            if ( grep $_ eq 'latest', @{$versions} ) {
+
+                # we want a combination of 'latest' and specific versions
+                @{$versions} = grep $_ ne 'latest', @{$versions};
+                $filter_versions = {
+                    bool => {
+                        should => [
+                            { terms => { version => $versions } },
+                            { term  => { status  => 'latest' } },
+                        ],
+                    }
+                };
+            }
+            else {
+                # we only want specific versions
+                $filter_versions = { terms => { version => $versions } };
+            }
+        }
+
+        $query = {
+            bool => {
+                must => [
+                    { term => { distribution => $dist } },
+                    $filter_versions
+                ]
+            }
+        };
+    }
+    else {
+        $query = { term => { distribution => $dist } };
+    }
+
     my $body = {
-        query  => { term => { distribution => $dist } },
+        query  => $query,
         size   => $size,
         sort   => [ { date => 'desc' } ],
         fields => [
@@ -583,7 +621,6 @@ sub versions {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my $data = [ map { $_->{fields} } @{ $ret->{hits}{hits} } ];
     single_valued_arrayref_to_scalar($data);
@@ -676,7 +713,6 @@ sub requires {
             sort  => [$sort],
         }
     );
-    return {} unless $ret->{hits}{total};
 
     return +{
         data  => [ map { $_->{_source} } @{ $ret->{hits}{hits} } ],
@@ -718,15 +754,16 @@ sub _get_latest_release {
             fields => [qw< name author >],
         },
     );
-    return unless $release->{hits}{total};
 
     my ($release_info) = map { $_->{fields} } @{ $release->{hits}{hits} };
     single_valued_arrayref_to_scalar($release_info);
 
-    return +{
+    return $release_info->{name} && $release_info->{author}
+        ? +{
         name   => $release_info->{name},
         author => $release_info->{author},
-    };
+        }
+        : undef;
 }
 
 sub _get_provided_modules {
@@ -749,14 +786,13 @@ sub _get_provided_modules {
             size => 999,
         }
     );
-    return unless $provided_modules->{hits}{total};
 
-    return [
-        map      { $_->{name} }
-            grep { $_->{indexed} && $_->{authorized} }
-            map  { @{ $_->{_source}{module} } }
-            @{ $provided_modules->{hits}{hits} }
-    ];
+    my @modules = map { $_->{name} }
+        grep { $_->{indexed} && $_->{authorized} }
+        map  { @{ $_->{_source}{module} } }
+        @{ $provided_modules->{hits}{hits} };
+
+    return @modules ? \@modules : undef;
 }
 
 sub _fix_sort_value {
@@ -781,7 +817,18 @@ sub _get_depended_releases {
     my $filter_modules = {
         bool => {
             should => [
-                map +{ term => { 'dependency.module' => $_ } },
+                map +{
+                    bool => {
+                        must => [
+                            { term => { 'dependency.module' => $_ } },
+                            {
+                                term => {
+                                    'dependency.relationship' => 'requires'
+                                }
+                            }
+                        ],
+                    },
+                },
                 @{$modules}
             ]
         }
@@ -805,7 +852,6 @@ sub _get_depended_releases {
             sort => $sort,
         }
     );
-    return unless $depended->{hits}{total};
 
     return +{
         data  => [ map { $_->{_source} } @{ $depended->{hits}{hits} } ],
@@ -817,6 +863,15 @@ sub _get_depended_releases {
 sub recent {
     my ( $self, $page, $page_size, $type ) = @_;
     my $query;
+    my $from = ( $page - 1 ) * $page_size;
+
+    if ( $from + $page_size > 10000 ) {
+        return {
+            releases => [],
+            total    => 0,
+            took     => 0,
+        };
+    }
 
     if ( $type eq 'n' ) {
         $query = {
@@ -847,7 +902,7 @@ sub recent {
 
     my $body = {
         size   => $page_size,
-        from   => ( $page - 1 ) * $page_size,
+        from   => $from,
         query  => $query,
         fields => [qw(name author status abstract date distribution)],
         sort   => [ { 'date' => { order => 'desc' } } ]
@@ -858,7 +913,6 @@ sub recent {
         type  => 'release',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my $data = [ map { $_->{fields} } @{ $ret->{hits}{hits} } ];
     single_valued_arrayref_to_scalar($data);
@@ -941,7 +995,7 @@ sub modules {
                 pod_lines
                 release
                 status
-                )
+            )
         ],
     };
 
@@ -950,7 +1004,6 @@ sub modules {
         type  => 'file',
         body  => $body,
     );
-    return unless $ret->{hits}{total};
 
     my @files = map +{
         %{ ( single_valued_arrayref_to_scalar( $_->{fields} ) )[0] },
